@@ -1,0 +1,77 @@
+﻿{% extends 'base_list.html' %}
+
+{# 导航栏 #}
+{% block navbar %}
+{% endblock %}
+
+{# 搜索和添加功能 #}
+{% block search_add %}
+{% endblock %}
+
+{# 表格头部 #}
+{% block thead %}
+{% endblock %}
+
+{# 表格主体 #}
+{% block tbody %}
+{% endblock %}
+
+{# 显示数量 #}
+{% block count %}
+{% endblock %}
+
+{# 翻页 #}
+{% block pager %}
+{% endblock %} 
+
+{% block else %}
+    <div class="row" style="padding-top: 0px">
+        <div class="container" style="text-align: center">
+            <font size='8'>
+                <h3>欢迎您，来到 自动化测试平台 V1.0</h3>
+            </font>
+            <a href="{% url 'product_manage' %}">单击进入产品中心</a>
+        </div>
+    </div>
+    <!-- 图表容器 DOM -->
+    <div class="container">
+        <div id="container" class="col-sm-6 col-sm-offset-3" style="height: 300px;"></div>
+    </div>
+    <!-- 引入 highcharts.js -->
+    <script src="http://cdn.hcharts.cn/highcharts/highcharts.js"></script>
+    <script>
+        // 图表配置
+        var options = {
+            chart: {
+                type: 'line'                          //指定图表的类型，默认是折线图（line）
+            },
+            title: {
+                text: null                 // 标题
+            },
+            xAxis: {
+                categories: {{ login_times|safe }}   // x 轴分类
+            },
+            yAxis: {
+                title: {
+                    text: null,                // y 轴标题
+                },
+                labels: {
+                    enabled: false
+                }
+            },
+            series: [{                              // 数据列
+                name: '近期访问人数',                        // 数据列名
+                data: {{ login_num }}                 // 数据
+            }, ],
+            plotOptions: {
+                line: {
+                    dataLabels: {
+                        enabled:true,
+                    },
+                },
+            }
+        };
+        // 图表初始化函数
+        var chart = Highcharts.chart('container', options);
+    </script>
+{% endblock %}

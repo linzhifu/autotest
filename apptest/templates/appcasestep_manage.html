@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>自动化测试平台</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    {% load bootstrap4 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <script type="text/javascript" src="/admin/jsi18n/"></script>
+    <script type="text/javascript" src="/static/admin/js/vendor/jquery/jquery.js"></script>
+    <script type="text/javascript" src="/static/admin/js/jquery.init.js"></script>
+    <script type="text/javascript" src="/static/admin/js/core.js"></script>
+    <script type="text/javascript" src="/static/admin/js/admin/RelatedObjectLookups.js"></script>
+    <script type="text/javascript" src="/static/admin/js/actions.js"></script>
+    <script type="text/javascript" src="/static/admin/js/urlify.js"></script>
+    <script type="text/javascript" src="/static/admin/js/prepopulate.js"></script>
+    <script type="text/javascript" src="/static/admin/js/vendor/xregexp/xregexp.js"></script>
+</head>
+<body role="document">
+    <!-- 导航栏-->
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark fixed-top" style="border-radius: 0">
+        <div class="container justify-content-end"> 
+            <ul class="navbar-nav">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <li class="active" id="apis"><a style="color: gray;font-size: 18px" href="/apitest/apis_manage/" target="mainFrame">单一接口</a></li>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <li class="active" id="apitest"><a style="color: gray;font-size: 18px" href="/apitest/apitest_manage/" target="mainFrame">流程接口</a></li>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <li class="active" id="appcase"><a style="color: white;font-size: 18px" href="/apptest/appcase_manage/" target="mainFrame">app用例</a></li>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <li class="active" id="webcase"><a style="color: gray;font-size: 18px" href="/webtest/webcase_manage/" target="mainFrame">web用例</a></li>
+            </ul>
+        </div>
+        <div class="container justify-content-end">
+            <ul class="navbar-nav" style="font-size:18px;">
+                <li class="nav-item"><a class="nav-link active" href="#">
+                    <i class="glyphicon glyphicon-user"></i>&nbsp;{{user}}</a></li>
+                <li class="nav-item"><a class="nav-link" href="/user/logout/" target="_parent">退出</a></li>
+            </ul>
+        </div>
+    </nav>
+    <!--搜索-->
+    <div class="page-header" style="padding: 40px 20px 0">
+        <form action="/appstepsearch/" method="GET" "navbar-form">
+            <input type="search" name="appteststep" placeholder="名称" required>
+            <button type="submit">搜索</button>
+        </form>
+    </div>
+    <!--流程接口步骤-->
+    <div class="row" style="font-size: 14px">
+        <div class="col-md-11">
+            <table class="table table-hover">
+                <thead class="thead-light">
+                    <tr> 
+                        <th>产品</th>
+                        <th>所属用例</th>
+                        <th>步聚</th>
+                        <th>定位方式</th>
+                        <th>控件元素</th>
+                        <th>操作方法</th>
+                        <th>测试数据</th>
+                        <th>验证数据</th>
+                        <th>测试结果</th>
+                        <th>时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appcasestep in appcasesteps %}
+                    <tr>
+                    {% if appcasestep.Appcase.id == appcase.id %}
+                    <td>{{ appcasestep.Appcase.Product.productname }}</td>
+                    <td>case_{{ appcasestep.Appcase.id }}_{{ appcasestep.Appcase.appcasename }}</td>
+                    <td>{{ appcasestep.appteststep }}:{{ appcasestep.apptestobjname }}</td>
+                    <td>{{ appcasestep.appfindmethod }}</td>
+                    <td>{{ appcasestep.appevelement }}</td>
+                    <td>{{ appcasestep.appoptmethod }}</td>
+                    <td>{{ appcasestep.apptestdata }}</td>
+                    <td>{{ appcasestep.appassertdata }}</td>
+                    <td>{% if appcasestep.apptestresult == 1 %}
+                        <a style='color:green'>{{ appcasestep.apptestresult }}</a> 
+                        {% else %}
+                        <a style='color:red'>{{ appcasestep.apptestresult }}</a> 
+                        {% endif %}
+                    </td>
+                    <td>{{ appcasestep.create_time }}</td>
+                    {% else %}
+                    {% endif %}
+                    {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div style="width: 100px;margin: 0 auto;">
+        <td>
+            <a style='color:light blue'  href="../appcase_manage/" >
+            <img src="/static/admin/img/icon-yes.svg" alt="返回"/>返回
+            </a>
+            </td>
+            
+            <td>
+            <a style='color:light blue' class="related-widget-wrapper-link add-related" id="add_id_Appcase" href="/admin/apptest/appcase/{{ appcase.id  }}/change/?_to_field=id&_popup=1">
+            <img src="/static/admin/img/icon-changelink.svg"/>编辑</a>
+        </td>
+    </div>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>自动化测试平台</title>
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static '/bootstrap-3.3.7/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static '/css/base_list.css' %}">
+    <script src="{% static '/bootstrap-3.3.7/js/jquery.min.js' %}"></script>
+    <script src="{% static '/bootstrap-3.3.7/js/bootstrap.min.js' %}"></script>
+</head>
+<body role="document">
+    <!-- 导航栏-->
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a href=# class="navbar-brand dropdown-toggle" data-toggle="dropdown">
+                    <i class="glyphicon glyphicon-home"></i>&nbsp;&nbsp;&nbsp;自动化测试平台
+                    <span class="caret"></span>
+                </a>
+                <ul class="nav dropdown-menu">
+                    <li>
+                        <a href="{% url 'product_manage' %}">
+                        <i class="glyphicon glyphicon-gift"></i>产品中心
+                        </a>
+                    </li>
+                    <li class="dropdown">
+                        <a href="{% url 'apis_manage' %}">
+                            <i class="glyphicon glyphicon-star"></i>用例管理
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'welcome' %}">
+                            <i class="glyphicon glyphicon-fire"></i>定时任务
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'welcome' %}">
+                            <i class="glyphicon glyphicon-eye-open"></i>BUG管理
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'welcome' %}">
+                            <i class="glyphicon glyphicon-calendar"></i>测试报告
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'welcome' %}">
+                            <i class="glyphicon glyphicon-cog"></i>系统设置
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" onclick="test()">
+                            <i class="glyphicon glyphicon-refresh"></i>TEST</a>
+                    </li>
+                </ul>
+                <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div id="navbar-collapse" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    {% block navbar %}{% endblock %}
+                </ul>
+                <!--搜索-添加-->
+                <ul class="nav navbar-nav">
+                    {% block search_add %}{% endblock %}
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    {% block other_navbar %}{% endblock %}
+                    <li class="disabled"><a href="#"><i class="glyphicon glyphicon-user"></i>&nbsp;你好，{{user}}</a></li>
+                    <li><a href="{% url 'home' %}"><i class="glyphicon glyphicon-th-list"></i>&nbsp;首页</a></li>
+                    <li><a href="{% url 'logout' %}" target="_parent"><i class="glyphicon glyphicon-share"></i>&nbsp;退出</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!--主要内容-->
+    <div class="container" style="padding-top: 70px">
+        <div class="row" style="text-align: center">
+            <div class="col-xs-12">
+                <table class="table table-hover table-bordered">
+                    <thead style="text-align: center">
+                        {% block thead %}
+                        {% endblock %}
+                    </thead>
+                    <tbody>
+                        {% block tbody %}
+                        {% endblock %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!--统计和翻页功能-->
+    {# 把翻页功能固定显示在右下角 #}
+    <div style="text-align: center; position: absolute; left: 50%; bottom: 0px;transform: translate(-50%,0)">
+        <div class="">
+            {% block count %}
+            {% endblock %}
+        </div>
+        <div>
+            <ul class="pagination">
+                {% block pager %}
+                {% endblock %} 
+            </ul>
+        </div>
+    </div>
+    {% block else %}
+    {% endblock %}
+    {# 主要写JS代码 #}
+    {% block script %}
+    {% endblock %}
+    <script>
+        function test(){
+            $.ajax({
+                url:"{% url 'apitest' %}",
+                type:"GET",
+            })
+        }
+    </script>
+</body>
+</html>

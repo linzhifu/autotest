@@ -1,0 +1,134 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Longsys自动化测试平台</title>
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static '/bootstrap-3.3.7/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static '/css/base_list.css' %}">
+    <script src="{% static '/bootstrap-3.3.7/js/jquery.min.js' %}"></script>
+    <script src="{% static '/bootstrap-3.3.7/js/bootstrap.min.js' %}"></script>
+</head>
+    <style>
+        body {
+            background-image: url('/static/img/login_bg.jpg')
+        }
+        .form-head {
+            background: #417690;
+            height: 50px; 
+            line-height: 50px; 
+            border-radius: 8px 8px 0 0;
+            font-size: 17px;
+        }
+        .form-body {
+            background: white;
+            border-radius: 0 0 2px 2px;
+            padding-top: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container" style="margin-top: 100px">
+        <div class="row">
+            <div class="col-sm-4 col-sm-offset-4 form-head">
+                <p2>Longsys  |  自动化测试平台</p2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4 col-sm-offset-4 form-body">
+                <!-- tab标签 -->
+                <ul class="nav nav-tabs" style="color: #000;">
+                    <li class="active">
+                        <a href="#psw-login" data-toggle="tab">密码登陆</a>
+                    </li>
+                    <li>
+                        <a href="#code-login" data-toggle="tab">动态登陆</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <!-- 密码登陆 -->
+                    <form method="post" action="{% url 'login' %}" id="psw-login" class="tab-pane active" role="form" style="padding-top: 10px">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <!-- <label for="username" style="font-size: 14px">用户名</label> -->
+                            <input class="form-control" id="username" name="username" type="text" placeholder="用户名或邮箱" required>
+                        </div>
+                        <div class="form-group">
+                            <!-- <label for="password" style="font-size: 14px">密码</label> -->
+                            <input class="form-control" id="password" name="password" type="password" placeholder="密码" required>
+                        </div>
+                        <button class="btn btn-primary" id="submit" type="submit" style="font-size: 14px; width: 100%;">登 录</button>
+                    </form>
+                    <!-- 邮箱验证码登陆 -->
+                    <form method="post" action="{% url 'login' %}" id="code-login" class="tab-pane" role="form" style="padding-top: 10px">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <!-- <label for="email" style="font-size: 14px">邮箱</label> -->
+                            <input class="form-control" id="email" name="username" type="email" placeholder="邮箱" required>
+                        </div>
+                        <div class="form-group">
+                            <!-- <label for="code" style="font-size: 14px">验证码</label> -->
+                            <div class="input-group">
+                                <input class="form-control" id="code" name="code" type="text" placeholder="验证码" required>
+                                <span class="input-group-btn">
+                                    <button id="get_code" class="btn btn-primary" type="button">获取验证码</button>
+                                </span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="code-submit" type="submit" style="font-size: 14px; width: 100%">登 录</button>
+                    </form>
+                </div>
+                <!-- 忘记密码-注册用户 -->
+                <div style="height: 30px;">
+                    <a href="{% url 'register' %}" class="pull-right" style="line-height: 30px;padding-left: 1ex;">新用户注册</a>
+                    <a href="{% url 'change_pwd' %}" class="pull-right" style="line-height: 30px">忘记密码</a>
+                    <span style="color: red; line-height: 30px">&nbsp;&nbsp;&nbsp;{{ error }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(function(){
+            // 获取验证码
+            $('#get_code').click(function(){
+                email = $('#email')
+                url = "{% url 'get_code' %}?email="+email.val()
+                $.ajax({
+                    url:url,
+                    type:"GET",
+                    success:function(data){
+                        if (data['status'] == 'SUCCESS'){
+                            alert('发送成功');
+                            // // 限制邮箱更改
+                            // email.attr('readonly','readonly')
+                            // 把按键变灰色    
+                            $('#get_code').attr("disabled",true);
+                            var time = 30;
+                            $('#get_code').text(time+"s");
+                            // 设置定时器30s
+                            var interval=setInterval(function(){
+                                if (time<=1){
+                                    // 恢复按键    
+                                    $('#get_code').attr("disabled",false);
+                                    $('#get_code').text("获取验证码");
+                                    clearInterval(interval);
+                                }
+                                else{
+                                    time--;
+                                    $('#get_code').text(time+"s");
+                                }
+                            },1000)
+                        }
+                        else{
+                            alert(data['status'])
+                        }
+                    },
+                })
+            })
+        })
+    </script>
+</body>
+</html>

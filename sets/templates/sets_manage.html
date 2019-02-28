@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>自动化测试平台</title>
+    {% load bootstrap4 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+</head>
+<body role="document">
+    <!-- 导航栏-->
+    <nav class="navbar navbar-inverse navbar-fixed-top navbar-expand-sm">
+        <div class="container">
+            <div class="navbar-header">
+                <a href="#" class="navbar-brand">自动化测试平台</a>
+            </div>
+            <div id="navbar" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active nav-link"><a href="/apis_manage/">单一接口测试</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#" class="nav-link">{{user}}</a></li>
+                    <li><a href="/logout/" class="nav-link">退出</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!--流程接口步骤-->
+    <div class="row" style="padding-top: 20px">
+        <div class="col-md-11">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>设置名称</th>
+                        <th>设置值</th>
+                        <th>编辑</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for set in sets %}
+                    <tr>
+                        <td>{{ set.id }}</td>
+                        <td>{{ set.setname }}</td>
+                        <td>{{ set.setvalue }}</td>
+                        <td><a style='color:light blue' 
+                                class="related-widget-wrapper-link add-related" 
+                                id="add_id_Apis" 
+                                href="/admin/sets/set/{{ apis.id  }}/change/?_to_field=id&_popup=1">
+                                <img src="/static/admin/img/icon-changelink.svg"/>
+                            </a>
+                        </td>
+                    <tr />
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

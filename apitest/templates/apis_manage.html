@@ -1,0 +1,260 @@
+{% extends 'base_list.html' %}
+
+{# 导航栏 #}
+{% block navbar %}
+    <li class="active"><a href="{% url 'apis_manage' %}">api用例</a></li>
+    <li><a href="{% url 'welcome' %}">app用例</a></li>
+    <li><a href="{% url 'welcome' %}">web用例</a></li>
+{% endblock %}
+
+{# 搜索和添加功能 #}
+{% block search_add %}
+    <li>
+        <form class="navbar-form" action="{% url 'apissearch' %}" method="GET" role="search">
+                <div class="form-group">
+                    <input type="search" name="search_info" class="form-control" placeholder="搜索内容" required>
+                    <select name="search_type" class="form-control">
+                        <option value="productname">产品</option>
+                        <option value="apiname">模块</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-default">搜索</button>
+                <button type="button" class="btn btn-default">
+                    <a href="{% url 'apis_manage' %}" style="color: rgb(51, 51, 51);">全部</a>
+                </button>
+                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#myModal">添加</button>
+        </form>
+    </li>
+{% endblock %}
+
+{# 表格头部 #}
+{% block thead %}
+    <tr>
+        <th>产品</th>
+        <th>后端模块</th>
+        <th>URL地址</th>
+        <th>负责人</th>
+        <th>测试结果</th>
+        <th>创建时间</th>
+        <th>修改时间</th>
+        <th>编辑</th>
+        <th>删除</th>
+    </tr>
+{% endblock %}
+
+{# 表格主体 #}
+{% block tbody %}
+    {% for apis in apiss %}
+    <form id="{{ apis.pk }}_modify" action="{% url 'apis_modify' %}?pk={{ apis.pk }}&product_id={{ apis.Product.pk }}" method="POST">
+        {% csrf_token %}
+        <tr id="{{ apis.pk }}_tr">
+            <td><select name="Product" class="modify" disabled="disabled">
+                {% for product_oj in product_ojs %}
+                    <option value="{{ product_oj.pk }}">{{ product_oj.productname }}</option>
+                {% endfor %}
+                    <option value="{{ apis.Product.pk }}" selected>{{ apis.Product.productname }}</option>
+                </select>
+            </td>
+            <td>
+                <input type="text" name="apiname" value="{{ apis.apiname }}" class="modify" readonly="readonly">
+                <a href="{% url "apiinfos_manage" %}?apis.id={{ apis.id }}">
+                    <i class="glyphicon glyphicon-import"></i>
+                </a>
+            </td>
+            <td><input type="text" name="apiurl" value="{{ apis.apiurl }}" class="modify" readonly="readonly"></td>
+            <td><select name="apitester" class="modify" disabled="disabled">
+                {% for user_oj in user_ojs %}
+                    <option value="{{ user_oj.pk }}">{{ user_oj.username }}</option>
+                {% endfor %}
+                    <option value="{{ apis.apitester_id }}" selected>{{ apis.apitester }}</option>
+                </select>
+            </td>
+            <td>{% if apis.apistatus == 1 %}
+                    <a style='color:green'>PASS</a> 
+                    {% else %}
+                    <a style='color:red'>FAIL</a> 
+                    {% endif %}
+            </td>
+            <td>{{ apis.create_time }}</td>
+            <td>{{ apis.update_time }}</td>
+            <td>
+                <!-- <a href="javascript:void(0);" onclick="document:modify_{{ apis.pk }}.submit();"> -->
+                <button type="button" class="modify" onclick="change_btn_{{ apis.pk }}()">
+                    <img src="/static/admin/img/icon-changelink.svg" alt="编辑" title="编辑"/>
+                </button>
+                <button type="submit" class="modify hidden">
+                        <img src="/static/admin/img/icon-yes.svg" alt="编辑" title="编辑"/>
+                    </button>
+                <!-- </a> -->
+            </td>
+            <td>
+                <a data-toggle="modal" href="#{{ apis.id }}_delete">
+                    <img src="/static/admin/img/icon-deletelink.svg" alt="删除" title="删除"/>
+                </a>
+            </td>
+            <!-- 删除-模态框（Modal） -->
+            <div class="modal fade" id="{{ apis.id }}_delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title text-info" id="myModalLabel">是否删除模块？</h4>
+                        </div>
+                        <div class="modal-body">
+                            <h4 class="text-danger">{{ apis.apiname }}</h4>
+                            <span id="delete_error">&nbsp;</span>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-danger" onclick="delete_api({{ apis.id }})">确定</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </tr>
+    </form>
+    <script>
+        // 编辑按键,按下后隐藏编辑按键,显示保存按键
+        function change_btn_{{ apis.pk }}(){
+            $("#{{ apis.pk }}_tr input").removeAttr("readonly");
+            $("#{{ apis.pk }}_tr select").removeAttr("disabled");
+            $("#{{ apis.pk }}_tr [type=button]").addClass("hidden")
+            $("#{{ apis.pk }}_tr [type=submit]").removeClass("hidden")
+        }
+        // 修改 {{ apisinfo.id }}_modify 是form的ID
+        $("#{{ apis.pk }}_modify").submit(function(){
+            $.ajax({
+                url:"{% url 'apis_modify' %}?pk={{ apis.pk }}&product_id={{ apis.Product.pk }}",
+                type:"POST",
+                data:$(this).serialize(),
+                success:function(data){
+                    if (data['status'] == 'SUCCESS'){
+                        alert("修改成功");
+                        // 刷新网页
+                        window.location.reload()
+                    }
+                    else {
+                        alert(data['info'])
+                    }
+                }
+            });
+            return false;
+        })
+    </script>
+    {% empty %}
+    <tr>
+        <td colspan="111">暂无API
+        </td>
+    </tr>
+    {% endfor %}
+    <tr>
+        <td colspan="111">
+            <a style='color:light blue'  href="{% url 'product_manage' %}" >
+                <img src="/static/admin/img/icon-yes.svg" alt="产品中心"/>产品中心
+            </a>
+        </td>
+    </tr>
+{% endblock %}
+
+{# 显示数量 #}
+{% block count %}
+    共{{ apiss|length }}条记录
+{% endblock %}
+
+{# 翻页 #}
+{% block pager %}
+    {# 上一页链接开始#}
+    {% if apiss.has_previous %}
+        {#  如果有上一页则正常显示上一页链接#}
+        <li class=""><a href="?page={{ apiss.previous_page_number }}">&laquo;</a></li>    {#  上一页标签 #}
+    {% else %}
+        <li class="disabled"><a href="#">&laquo;</a></li> {# 如果当前不存在上一页则上一页的链接不可点击#}
+    {% endif %}
+    {# 上一页链接开始#}
+
+    {% for num in page_range %}     
+        {% if num == apiss.number %}
+            <li class="active"><a href="?page={{ num }}">{{ num }}</a></li> {#显示当页数链接#} 
+        {% else %}
+            <li><a href="?page={{ num }}">{{ num }}</a></li>
+        {% endif %}
+    {% endfor %}
+
+    {# 下一页链接开始#}
+    {% if apiss.has_next %} {#  如果有下一页则正常显示下一页链接#}
+        <li><a href="?page={{ apiss.next_page_number }}">&raquo;</a></li>
+    {% else %}
+        <li class="disabled"><a href="#">&raquo;</a></li>
+    {% endif %}
+    {# 下一页链接结束#}
+
+{% endblock %}
+{% block else %}
+<!-- 添加API 模态框（Modal） -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title text-info" id="myModalLabel">新增API模块&nbsp;&nbsp;<span id="add_error"></span></h4>
+            </div>
+            <form id="add_api" action="{% url 'addapis' %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-body" class="navbar-form">
+                        {{ apis_form }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">确定</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+    <script>
+        // 删除产品，需要管理员权限
+        function delete_api(apis_pk){
+            url = "{% url 'deleteapis' %}?pk="+apis_pk
+            $.ajax({
+                url:url,
+                type:"GET",
+                success:function(data){
+                    if (data['status'] == 'SUCCESS'){
+                        // $('#delete_error').text('删除成功');
+                        // $('#delete_error').css({"color":"blue"});
+                        // 刷新网页
+                        window.location.reload()
+                    }
+                    else{
+                        $('#delete_error').text('删除失败，没有权限');
+                        $('#delete_error').css({"color":"red"});
+                    }
+                },
+            })
+        }
+        // 添加产品 add_product 是form的ID
+        $("#add_api").submit(function(){
+            $.ajax({
+                url:"{% url 'addapis' %}",
+                type:"POST",
+                data:$(this).serialize(),
+                success:function(data){
+                    if (data['status'] == 'SUCCESS'){
+                        // $("#add_error").text("添加成功");
+                        // $("#add_error").css({"color": "blue"});
+                        // 刷新网页
+                        window.location.reload()
+                    }
+                    else {
+                        $("#add_error").text('添加失败，产品名已存在');
+                        $("#add_error").css({"color": "red"});
+                        alert('添加失败，产品名已存在')
+                    }
+                }
+            });
+            return false;
+        })
+    </script>
+{% endblock %}

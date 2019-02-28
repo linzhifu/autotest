@@ -1,0 +1,37 @@
+﻿{% extends 'base_list.html' %}
+
+{# 导航栏 #}
+{% block navbar %}
+{% endblock %}
+
+{# 搜索和添加功能 #}
+{% block search_add %}
+{% endblock %}
+
+{# 表格头部 #}
+{% block thead %}
+{% endblock %}
+
+{# 表格主体 #}
+{% block tbody %}
+{% endblock %}
+
+{# 显示数量 #}
+{% block count %}
+{% endblock %}
+
+{# 翻页 #}
+{% block pager %}
+{% endblock %} 
+
+{% block else %}
+    <div class="row" style="padding-top: 0px">
+        <div class="container" style="text-align: center">
+            <font size='8'>
+                <h1>欢迎您，功能暂未开放，敬请期待</h1>
+            </font>
+            <a href="#" onclick="javascript:history.back(-1);">
+                <i class="glyphicon glyphicon-backward"></i> 返回上一级</a>
+        </div>
+    </div>
+{% endblock %}

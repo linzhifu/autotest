@@ -1,0 +1,674 @@
+{% extends 'base_list.html' %}
+
+{# 导航栏 #}
+{% block navbar %}
+    <li class="active"><a href="{% url 'apis_manage' %}">api用例</a></li>
+    <li><a href="{% url 'welcome' %}">app用例</a></li>
+    <li><a href="{% url 'welcome' %}">web用例</a></li>
+{% endblock %}
+
+{# 搜索和添加功能 #}
+{% block search_add %}
+    <button type="submit" class="btn btn-default navbar-btn">
+        <a href="{% url 'apiinfos_manage' %}?apis.id={{ apis.id }}" style="color: rgb(51, 51, 51);">刷新</a>
+    </button>
+{% endblock %}
+
+{# 表格头部 #}
+{% block thead %}
+    <tr>
+        <th>
+            <div class="pull-left">
+                模块：{{ apis.apiname }}
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                测试负责人：{{ apis.apitester }}
+            </div>
+            <div class="pull-left">
+                <a class=" " style='color:light blue'  href="{% url 'apis_manage' %}?product_id={{ apis.Product_id }}">
+                    <img src="/static/admin/img/icon-yes.svg" alt="返回"/>返回上一级
+                </a>
+            </div>
+        </th>
+    </tr>
+{% endblock %}
+
+{# 表格主体 #}
+{% block tbody %}
+{% endblock %}
+
+{# 显示数量 #}
+{% block count %}
+{% endblock %}
+
+{# 翻页 #}
+{% block pager %}
+{% endblock %} 
+
+{# 额外内容 #}
+{% block else %}
+<div class="container">
+    <!-- 测试用户登陆信息，如token等 -->
+    <div class="panel-group" id="accordion">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a href="#login-info" data-toggle="collapse">测试登陆信息</a>
+                </h3>
+            </div>
+            <div class="panel-collapse collapse" id="login-info">
+                <div class="panel-body">
+                    <form id="get-login-data" action="#" class="form-horizontal" role="form" method="POST">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <div class="col-sm-1">
+                                <button type="button" class="btn btn-primary" onclick="get_login_data()">获取</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-5">
+                                <pre class="response">unkonwn</pre>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function get_login_data(){
+            data_input = $('#get-login-data pre')
+            // ajax请求
+            $.ajax({
+                url:"{% url 'test_login' %}",
+                type:"GET",
+                success:function(data){
+                    try{
+                        json_data = JSON.parse(data['info'])
+                        data_input.text(JSON.stringify(json_data,null,4))
+                    }                       
+                    catch{
+                        data_input.text(data['info'])
+                    }
+                },
+                error:function(){
+                    data_input.css({"color":"red"})
+                    data_input.text("fail")
+                    data_input.text("4004 error")
+                }
+            })
+            return false;
+        }
+    </script>
+    <!-- API信息内容 -->
+    {% for apisinfo in apiinfos %}
+        <div class="panel-group" id="accordion">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <a href="#{{ apisinfo.id }}" data-toggle="collapse">{{ apisinfo.apiname }}</a>
+                        {% if apisinfo.apistatus == 1 %}
+                        <span style='color:green'>&nbsp;pass</span>
+                        {% else %}
+                        <span style='color:red'>fail</span>
+                        {% endif %} 
+                    </h3>
+                </div>
+                <div id="{{ apisinfo.id }}" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <form id="{{ apisinfo.id }}_modify" action="{% url 'modifyapi' %}?pk={{ apisinfo.id }}&apis_id={{ apisinfo.api_id }}" class="form-horizontal" role="form" method="POST">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <div class="col-sm-5">
+                                    <input type="text" class="form-control hidden" name="api" value="{{ apisinfo.api_id }}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ apisinfo.id }}-apiname" class="col-sm-1 control-label">API</label>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control" id="{{ apisinfo.id }}-apiname" name="apiname" value="{{ apisinfo.apiname }}" readonly="readonly">
+                                </div>
+                                <div class="col-sm-1">
+                                    <input type="number" class="form-control" id="add-level" name="level" value="{{ apisinfo.level }}" readonly="readonly">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ apisinfo.id }}-result" class="col-sm-1 control-label">测试结果</label>
+                                <div class="col-sm-5">
+                                    {% if apisinfo.apistatus == 1 %}
+                                    <p class="form-control" id="{{ apisinfo.id }}-result" style='color:green'>{{ apisinfo.create_time }}&nbsp;&nbsp;&nbsp;pass</p>
+                                    {% else %}
+                                    <p class="form-control" id="{{ apisinfo.id }}-result" style='color:red'>{{ apisinfo.create_time }}&nbsp;&nbsp;&nbsp;fail</p>
+                                    {% endif %} 
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ apisinfo.id }}-url" class="col-sm-1 control-label">url</label>
+                                <div class="col-sm-2">
+                                    <select class="form-control" name="apimethod" disabled="disabled">
+                                        <option value={{ apisinfo.apimethod }}>{{ apisinfo.apimethod }}</option>
+                                        <option value="get">get</option>
+                                        <option value="post">post</option>
+                                        <option value="put">put</option>
+                                        <option value="patch">patch</option>
+                                        <option value="delete">delete</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-3">
+                                    <input type="text" class="form-control" id="{{ apisinfo.id }}-url" name="apiurl" value="{{ apisinfo.apiurl }}" readonly="readonly">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ apisinfo.id }}-param" class="col-sm-1 control-label">param</label>
+                                <div class="col-sm-5">
+                                    <textarea class="form-control hidden" rows="3" column="10" name="apiparamvalue" id="{{ apisinfo.id }}-param">{{ apisinfo.apiparamvalue }}</textarea>
+                                    <pre>{{ apisinfo.apiparamvalue }}</pre>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ apisinfo.id }}-body-type" class="col-sm-1 control-label">b-type</label>
+                                <div class="col-sm-5">
+                                    <select class="form-control" id="{{ apisinfo.id }}-body-type" name="bodytype" disabled="disabled">
+                                        <option value={{ apisinfo.bodytype }} selected>{{ apisinfo.bodytype }}</option>
+                                        <option value="application/json;charset=utf-8">application/json;charset=utf-8</option>
+                                        <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ apisinfo.id }}-body" class="col-sm-1 control-label">body</label>
+                                <div class="col-sm-5">
+                                    <textarea class="form-control hidden" rows="3" column="10" name="apijson" id="{{ apisinfo.id }}-body">{{ apisinfo.apijson }}</textarea>
+                                    <pre>{{ apisinfo.apijson }}</pre>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ apisinfo.id }}-response" class="col-sm-1 control-label">response</label>
+                                <div class="col-sm-5">
+                                    <textarea class="form-control hidden" rows="3" column="10" name="apiresponse" id="{{ apisinfo.id }}-response">{{ apisinfo.apiresponse }}</textarea>
+                                    <pre>{{ apisinfo.apiresponse }}</pre>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-1 col-sm-offset-1">
+                                    <button type="button" class="btn btn-primary edit" onclick="change_btn_{{ apisinfo.id }}()">编辑</button>
+                                    <button type="submit" class="btn btn-primary hidden">保存</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-1 col-sm-offset-1">
+                                    <button type="button" class="btn btn-primary test">测试</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="response" class="col-sm-1 control-label">测试结果</label>
+                                <div class="col-sm-5">
+                                    <span class="form-control result">unkonwn</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="response" class="col-sm-1 control-label">响应数据</label>
+                                <div class="col-sm-5">
+                                    <pre class="response">unkonwn</pre>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-1 col-sm-offset-1">
+                                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#{{ apisinfo.id }}_delete">删除</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            // 格式化pre
+            $(function(){
+                var pres=$("#{{ apisinfo.id }}_modify pre")
+                pres.each(function(){
+                    if ($(this).prev().val()){
+                        pre_json = JSON.parse($(this).prev().val())
+                        pre_text = JSON.stringify(pre_json,null,4)
+                        $(this).text(pre_text)
+                    }
+                    else{
+                        $(this).text('None')
+                    }
+                })
+            })
+            // // 编辑按键,按下后隐藏编辑按键,显示保存按键
+            function change_btn_{{ apisinfo.id }}(){
+                $("#{{ apisinfo.id }}_modify input").removeAttr("readonly");
+                $("#{{ apisinfo.id }}_modify select").removeAttr("disabled");
+                $("#{{ apisinfo.id }}_modify button.edit").addClass("hidden")
+                $("#{{ apisinfo.id }}_modify [type=submit]").removeClass("hidden")
+                $("#{{ apisinfo.id }}_modify pre").addClass("hidden")
+                $("#{{ apisinfo.id }}_modify textarea").removeClass("hidden")
+                $("#{{ apisinfo.id }}_modify pre.response").removeClass("hidden")
+            }
+            // 修改 {{ apisinfo.id }}_modify 是form的ID
+            $("#{{ apisinfo.id }}_modify").submit(function(){
+                // 判断数据格式是否合法
+                // 判断param是否符合JSON格式
+                param = $("#{{ apisinfo.id }}-param").val()
+                // 去除所有空格
+                param = param.replace(/\s+/g,"");
+                if (!is_json(param)){
+                    alert("Param 不符合json格式")
+                    return false
+                }
+                // 判断body是否符合JSON格式
+                body = $("#{{ apisinfo.id }}-body").val()
+                // 去除所有空格
+                body = body.replace(/\s+/g,"");
+                if (!is_json(body)){
+                    alert("Body 不符合json格式")
+                    return false
+                }
+                // 判断response是否符合JSON格式
+                response = $("#{{ apisinfo.id }}-response").val()
+                // 去除所有空格
+                response = response.replace(/\s+/g,"");
+                if (!$.trim(response)){
+                    alert("响应数据不能为空")
+                    return false
+                }
+                if (!is_json(response)){
+                    alert("响应数据不符合json格式")
+                    return false
+                }
+                
+                $.ajax({
+                    url:"{% url 'modifyapi' %}?pk={{ apisinfo.id }}&apis_id={{ apisinfo.api_id }}",
+                    type:"POST",
+                    data:$(this).serialize(),
+                    success:function(data){
+                        if (data['status'] == 'SUCCESS'){
+                            alert("修改成功");
+                            // 刷新网页
+                            window.location.reload()
+                        }
+                        else {
+                            alert(data['info'])
+                        }
+                    }
+                });
+                return false;
+            })
+        </script>
+        <!-- 删除-模态框（Modal） -->
+        <div class="modal fade" id="{{ apisinfo.id }}_delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title text-info" id="myModalLabel">是否删除？</h4>
+                    </div>
+                    <div class="modal-body">
+                        <h4 class="text-danger">{{ apisinfo.apiname }}</h4>
+                        <span id="delete_error">&nbsp;</span>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">取消</button>      
+                        <button type="button" class="btn btn-danger" onclick="delete_apiinfo({{ apisinfo.pk }})">确定</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    <!-- 添加新的API -->
+    <div class="panel-group" id="accordion">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a href="#add_new_apiinfo" data-toggle="collapse" style="color: blue">添加新的API</a>
+                </h3>
+            </div>
+            <div id="add_new_apiinfo" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <form id="add_form" action="{% url 'addapiinfo' %}?apis_id={{ apis.pk }}" class="form-horizontal" role="form" method="POST">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <div class="col-sm-5">
+                                <input type="text" class="form-control hidden" name="api" value="{{ apis.pk }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <!-- <label for="add-apiname" class="col-sm-1 control-label">API</label> -->
+                            <div class="col-sm-3">
+                                <input type="text" class="form-control" id="add-apiname" name="apiname" placeholder="请输入API名称,如:登陆用户" required>
+                            </div>
+                            <div class="col-sm-2">
+                                <input type="number" class="form-control" id="add-level" name="level" value=-1>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <!-- <label for="add-url" class="col-sm-1 control-label">URL</label> -->
+                            <div class="col-sm-3">
+                                <input type="text" class="form-control" id="add-url" name="apiurl" placeholder="请输入URL,如:/api/vi/user/login">
+                            </div>
+                            <div class="col-sm-2">
+                                <select class="form-control" name="apimethod">
+                                    <option value="get">get</option>
+                                    <option value="post">post</option>
+                                    <option value="put">put</option>
+                                    <option value="patch">patch</option>
+                                    <option value="delete">delete</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <!-- <label for="add-param" class="col-sm-1 control-label">PARAM</label> -->
+                            <div class="col-sm-5">
+                                <textarea class="form-control" rows="3" column="10" name="apiparamvalue" id="add-param" placeholder='请输入Param,如：{"xxx":"xxx";"xxx":"xxx"}，可以为空'></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <!-- <label for="add-body-type" class="col-sm-1 control-label">B-Type</label> -->
+                            <div class="col-sm-5">
+                                <select class="form-control" id="add-body-type" name="bodytype">
+                                    <option value="application/json;charset=utf-8">application/json;charset=utf-8</option>
+                                    <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <!-- <label for="add-body" class="col-sm-1 control-label">Body</label> -->
+                            <div class="col-sm-5">
+                                <textarea class="form-control" rows="3" column="10" name="apijson" id="add-body" placeholder='请输入Body数据,如：{"xxx":"xxx";"xxx":"xxx"}，可以为空'></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <!-- <label for="add-response" class="col-sm-1 control-label">Response</label> -->
+                            <div class="col-sm-5">
+                                <textarea class="form-control" rows="3" column="10" name="apiresponse" id="add-response" placeholder='请输入响应数据,如：{"xxx":"xxx";"xxx":"xxx"}' required>{{ apisinfo.apiresponse }}</textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-1">
+                                <button type="submit" class="btn btn-primary">添加</button>
+                            </div>
+                            <div class="col-sm-1">
+                                <button type="reset" class="btn btn-primary">清除</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 图表容器 DOM -->
+    <div class="container">
+            <div id="container" class="col-sm-6 col-sm-offset-3" style="height: 300px;"></div>
+    </div>
+</div>
+{% endblock %}
+    <!-- 引入 highcharts.js -->
+{% block script %}
+    <script src="http://cdn.hcharts.cn/highcharts/highcharts.js"></script>
+    <script>
+        // 图表配置
+        var options = {
+            chart: {
+                type: 'column'                          //指定图表的类型，默认是折线图（line）
+            },
+            title: {
+                text: '一周内测试记录'                 // 标题
+            },
+            xAxis: {
+                categories: {{ test_times|safe }}   // x 轴分类
+            },
+            yAxis: {
+                title: {
+                    text: null,                // y 轴标题
+                },
+                labels: {
+                    enabled: true
+                }
+            },
+            colors: ['#058DC7', '#00FF00', '#FF0000', '#DDDF00',
+				 '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4'],
+            series: [{                              // 数据列
+                name: 'ALL',                        // 数据列名
+                data: {{ test_all }}                 // 数据
+            },{
+                name: 'PASS',                        // 数据列名
+                data: {{ test_pass }}                 // 数据
+            },{
+                name: 'FAIL',                        // 数据列名
+                data: {{ test_fail }}                 // 数据
+            }, ],
+            plotOptions: {                            //显示数值
+                column: {
+                    dataLabels: {
+                        enabled:false,
+                    },
+                },
+            }
+        };
+        // 图表初始化函数
+        var chart = Highcharts.chart('container', options);
+    </script>
+    <!-- js函数 -->
+    <script>
+        // 删除产品，需要管理员权限
+        function delete_apiinfo(apiinfo_pk){
+            url = "{% url 'deleteapiinfo' %}?pk="+apiinfo_pk
+            $.ajax({
+                url:url,
+                type:"GET",
+                success:function(data){
+                    if (data['status'] == 'SUCCESS'){
+                        // $('#delete_error').text('删除成功');
+                        // $('#delete_error').css({"color":"blue"});
+                        // 刷新网页
+                        window.location.reload()
+                    }
+                    else{
+                        $('#delete_error').text('删除失败，没有权限');
+                        $('#delete_error').css({"color":"red"});
+                    }
+                },
+            })
+        }
+        
+        //判断是否符合json格式
+        function is_json(str){
+            $.trim(str) // 去掉空格
+            if (str){
+                try{
+                    // alert(str)
+                    JSON.parse(str)
+                }
+                catch(e){
+                    return false
+                }
+                return true
+            }
+            else{
+                return true
+            }
+        }
+
+        // 添加产品 add_product 是form的ID
+        $("#add_form").submit(function(){
+            // 判断数据格式是否合法
+            // 判断param是否符合JSON格式
+            param = $("#add-param").val()
+            // 去除所有空格
+            param = param.replace(/\s+/g,"");
+            if (!is_json(param)){
+                alert("Param 不符合json格式")
+                return false
+            }
+            // 判断body是否符合JSON格式
+            body = $("#add-body").val()
+            // 去除所有空格
+            body = body.replace(/\s+/g,"");
+            if (!is_json(body)){
+                alert("Body 不符合json格式")
+                return false
+            }
+            // 判断response是否符合JSON格式
+            response = $("#add-response").val()
+            // 去除所有空格
+            response = response.replace(/\s+/g,"");
+            if (!$.trim(response)){
+                alert("响应数据不能为空")
+                return false
+            }
+            if (!is_json(response)){
+                alert("响应数据不符合json格式")
+                return false
+            }
+            
+            $.ajax({
+                url:"{% url 'addapiinfo' %}?apis_id={{ apis.pk }}",
+                type:"POST",
+                data:$(this).serialize(),
+                success:function(data){
+                    if (data['status'] == 'SUCCESS'){
+                        alert("添加成功");
+                        // 刷新网页
+                        window.location.reload()
+                    }
+                    else {
+                        alert('添加失败，产品名已存在')
+                    }
+                }
+            });
+            return false;
+        })
+        // json对象转url格式，如{'xxx':'xxx','xxx':'xxx'}转为xxx=xxx&xxx=xxx   
+        // data为json对象
+        function parseParams(data) {
+            try {
+                var tempArr = [];
+                for (var i in data) {
+                    var key = encodeURIComponent(i);
+                    var value = encodeURIComponent(data[i]);
+                    tempArr.push(key + '=' + value);
+                }
+                var urlParamsStr = tempArr.join('&');
+                return urlParamsStr;
+            } catch (err) {
+                return '';
+            }
+        }
+        //HTML加载完运行的函数,ajax请求测试
+        $(function(){
+            $("button.test").click(function(){
+                var method,url,param,bodytype,apijson,except,result,response
+                alert("开始测试")
+                $(this).parent().parent().prevAll().each(function(){
+                    if ($(this).find('[name=apimethod]').length){
+                        method=$(this).find('[name=apimethod]').val()
+                        // alert("method:"+method)
+                    }
+                    if ($(this).find('[name=apiurl]').length){
+                        url="{{ apis.apiurl }}"+$(this).find('[name=apiurl]').val()
+                        // alert("url:"+url)
+                    }
+                    if ($(this).find('[name=apiparamvalue]').length){
+                        param=$(this).find('[name=apiparamvalue]').val()
+                        // 去除所有空格
+                        param = param.replace(/\s+/g,"");
+                        // 判断param是否符合JSON格式
+                        if (!is_json(param)){
+                            alert("Param 不符合json格式")
+                            return false
+                        }
+                        // 如果不为空，转换格式
+                        if (param){
+                            param=parseParams(JSON.parse(param))
+                            param="?"+param
+                        }
+                        // alert("param:"+param)
+                    }
+                    if ($(this).find('[name=bodytype]').length){
+                        bodytype=$(this).find('[name=bodytype]').val()
+                        // alert("bodytype:"+bodytype)
+                    }
+                    if ($(this).find('[name=apijson]').length){
+                        apijson=$(this).find('[name=apijson]').val()
+                        // 去除所有空格
+                        apijson = apijson.replace(/\s+/g,"");
+                        // 判断body是否符合JSON格式
+                        if (!is_json(apijson)){
+                            alert("Body 不符合json格式")
+                            return false
+                        }
+                        if (apijson){
+                            apijson=JSON.parse(apijson)
+                            $.each(apijson,function(key, val){
+                                if (val=="NOW"){
+                                    apijson[key]=Date.parse(new Date())/1000
+                                }
+                            })
+                            apijson=JSON.stringify(apijson)
+                        }
+                        // alert("apijson:"+apijson)
+                    }
+                    if ($(this).find('[name=apiresponse]').length){
+                        except=$(this).find('[name=apiresponse]').val()
+                        // 去除所有空格
+                        except = except.replace(/\s+/g,"");
+                        // 判断except是否符合JSON格式
+                        if (!$.trim(except)){
+                            alert("响应数据不能为空")
+                            return false
+                        }
+                        if (!is_json(except)){
+                            alert("响应数据不符合json格式")
+                            return false
+                        }
+                        if (except){
+                            except=JSON.parse(except)
+                        }
+                        // alert("except:"+except)
+                    }
+                })
+                $(this).parent().parent().nextAll().each(function(){
+                    if ($(this).find('.result').length){
+                        result=$(this).find('.result')
+                    }
+                    if ($(this).find('.response').length){
+                        response=$(this).find('.response')
+                    }
+                })
+
+                // 把param加入url
+                if (param){
+                    url=url+param
+                }
+                // ajax请求
+                $.ajax({
+                    url:url,
+                    type:method,
+                    data:apijson,
+                    contentType:bodytype,
+                    success:function(data,status){
+                        $.each(except,function(key, val){
+                            if (except[key]!=data[key]){
+                                status="false"
+                            }
+                        })
+                        if (status!="success"){
+                            result.css({"color":"red"})
+                        }
+                        else{
+                            result.css({"color":"green"})
+                        }
+                        result.text(status)
+                        response.text(JSON.stringify(data,null,4))
+                    },
+                    error:function(){
+                        result.css({"color":"red"})
+                        result.text("fail")
+                        response.text("4004 error")
+                    }
+                })
+            })
+        })
+    </script>
+{% endblock %}

@@ -1,0 +1,243 @@
+{% extends 'base_list.html' %}
+
+{# 导航栏 #}
+{% block navbar %}
+    <li>
+        <a href="{% url 'product_manage' %}">产品列表</a>
+    </li>
+{% endblock %}
+
+{# 搜索和添加功能 #}
+{% block search_add %}
+    <li>
+        <form class="navbar-form" action="{% url 'prosearch' %}" method="POST" role="search">
+            <div class="form-group">
+                {% csrf_token %}
+                <input type="search" name="search_info" class="form-control" placeholder="搜索内容" required>
+                <select name="search_type" class="form-control">
+                    <option value="productname">产品名</option>
+                    <option value="productdesc">产品描述</option>
+                    <option value="producter">产品负责人</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-default">搜索</button>
+            <button type="button" class="btn btn-default">
+                <a href="{% url 'product_manage' %}" style="color: rgb(51, 51, 51);">全部</a>
+            </button>
+            <button type="button" class="btn btn-default" data-toggle="modal" data-target="#myModal">添加</button>
+        </form>
+    </li>
+{% endblock %}
+
+{# 表格头部 #}
+{% block thead %}
+<tr>
+    <th>产品名称</th>
+    <th>产品描述</th>
+    <th>测试用例</th>
+    <th>产品负责人</th>
+    <th>创建时间</th>
+    <!-- <th>优先级</th> -->
+    <th>编辑</th>
+    <th>删除</th>
+</tr>
+{% endblock %}
+
+{# 表格主体 #}
+{% block tbody %}
+    {% for product in products %}
+    <form action="{% url 'pro_modify' %}?pk={{ product.pk }}" id="modify_{{ product.pk }}" method="POST">
+        {% csrf_token %}
+        <tr id="{{ product.pk }}_tr">
+            <td>
+                <input type="text" name="productname" value="{{ product.productname }}" class="modify" readonly="readonly">
+            </td>
+            <td>
+                <input type="text" name="productdesc" value="{{ product.productdesc }}" class="modify" readonly="readonly">
+            </td>
+            <td>
+                <a href="{% url "apis_manage" %}?product_id={{ product.pk }}">api</a>
+            </td>
+            <td>
+                <select name="producter" class="modify" disabled="disabled">
+                {% for user_oj in user_ojs %}
+                    <option value="{{ user_oj.pk }}">{{ user_oj.username }}</option>
+                {% endfor %}
+                    <option value="{{ product.producter_id }}" selected>{{ product.producter }}</option>
+                </select>
+            </td>
+            <td>{{ product.create_time }}</td>
+            <!-- <td>{{ product.level }}</td> -->
+            <td>
+                <button type="button" class="modify" onclick="change_btn_{{ product.pk }}()">
+                    <img src="/static/admin/img/icon-changelink.svg" alt="编辑" title="编辑">
+                </button>
+                <button type="submit" class="modify hidden">
+                        <img src="/static/admin/img/icon-yes.svg" alt="保存" title="保存">
+                </button>
+            </td>
+            <td>
+                <a data-toggle="modal" href="#{{ product.id }}_delete">
+                    <img src="/static/admin/img/icon-deletelink.svg" alt="删除" title="删除"/>
+                </a>
+            </td>
+            <!-- 删除-模态框（Modal） -->
+            <div class="modal fade" id="{{ product.id }}_delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="text-info" id="myModalLabel">是否删除？</h4>
+                        </div>
+                        <div class="modal-body"><h4 class="text-danger">{{ product.productname }}</h4>
+                            <p id="delete_error">&nbsp;</p></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-danger" onclick="delete_product({{ product.pk }})">确定</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </tr>
+    </form>
+    <script>
+        // 编辑按键,按下后隐藏编辑按键,显示保存按键
+        function change_btn_{{ product.pk }}(){
+            $("#{{ product.pk }}_tr input").removeAttr("readonly");
+            $("#{{ product.pk }}_tr select").removeAttr("disabled");
+            $("#{{ product.pk }}_tr [type=button]").addClass("hidden")
+            $("#{{ product.pk }}_tr [type=submit]").removeClass("hidden")
+        }
+        // 修改 {{ apisinfo.id }}_modify 是form的ID
+        $("#modify_{{ product.pk }}").submit(function(){
+            // var i = confirm('确定保存吗')
+            // alert(i)
+            // if (!i) return false
+            $.ajax({
+                url:"{% url 'pro_modify' %}?pk={{ product.pk }}",
+                type:"POST",
+                data:$(this).serialize(),
+                success:function(data){
+                    if (data['status'] == 'SUCCESS'){
+                        alert("修改成功");
+                        // 刷新网页
+                        window.location.reload()
+                    }
+                    else {
+                        alert(data['info'])
+                    }
+                }
+            });
+            return false;
+        })
+    </script>
+    {% empty %}
+        <tr>
+            <td colspan="111">暂无产品</td>
+        </tr>
+    {% endfor %}
+{% endblock %}
+
+{# 显示数量 #}
+{% block count %}
+    共{{ products|length }}条记录
+{% endblock %}
+
+{# 翻页 #}
+{% block pager %}
+    {# 上一页链接开始#}
+    {% if products.has_previous %}
+        {#  如果有上一页则正常显示上一页链接#}
+        <li><a href="{% url 'product_manage' %}?page={{ products.previous_page_number }}">&laquo;</a></li>    {#  上一页标签 #}
+    {% else %}
+        <li class="disabled"><a href="#">&laquo;</a></li> {# 如果当前不存在上一页则上一页的链接不可点击#}
+    {% endif %}
+    {# 上一页链接开始#}
+
+    {% for num in page_range %}
+
+        {% if num == products.number %}
+            <li class="active"><a href="{% url 'product_manage' %}?page={{ num }}">{{ num }}</a></li> {#显示当页数链接#} 
+        {% else %}
+            <li><a href="{% url 'product_manage' %}?page={{ num }}">{{ num }}</a></li>
+        {% endif %}
+    {% endfor %}
+
+    {# 下一页链接开始#}
+    {% if products.has_next %} {#  如果有下一页则正常显示下一页链接#}
+        <li><a href="{% url 'product_manage' %}?page={{ products.next_page_number }}">&raquo;</a></li>
+    {% else %}
+        <li class="disabled"><a href="#">&raquo;</a></li>
+    {% endif %}
+    {# 下一页链接结束#}
+{% endblock %}
+{% block else %}
+<!-- 添加产品 模态框（Modal） -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title text-info" id="myModalLabel">新增产品&nbsp;&nbsp;<span id="add_error">&nbsp;</span></h4>
+            </div>
+            <form action="{% url 'addpro' %}" method="POST" id="add_product">
+                {% csrf_token %}
+                <div class="modal-body" class="navbar-form">
+                        {{ product_form }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">确定</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+    <script>
+        // 删除产品，需要管理员权限
+        function delete_product(product_pk){
+            url = "{% url 'deletepro' %}?pk="+product_pk
+            $.ajax({
+                url:url,
+                type:"GET",
+                success:function(data){
+                    if (data['status'] == 'SUCCESS'){
+                        // $('#delete_error').text('删除成功');
+                        // $('#delete_error').css({"color":"blue"});
+                        // 刷新网页
+                        window.location.reload()
+                    }
+                    else{
+                        $('#delete_error').text('删除失败，没有权限');
+                        $('#delete_error').css({"color":"red"});
+                    }
+                },
+            })
+        }
+        // 添加产品 add_product 是form的ID
+        $("#add_product").submit(function(){
+            $('#myAlert').alert()
+            $.ajax({
+                url:"{% url 'addpro' %}",
+                type:"POST",
+                data:$(this).serialize(),
+                success:function(data){
+                    if (data['status'] == 'SUCCESS'){
+                        // $("#add_error").text("添加成功");
+                        // $("#add_error").css({"color": "blue"});
+                        // 刷新网页
+                        window.location.reload()
+                    }
+                    else {
+                        $("#add_error").text('添加失败，产品名已存在');
+                        $("#add_error").css({"color": "red"});
+                        alert('添加失败，产品名已存在')
+                    }
+                }
+            });
+            return false;
+        })
+    </script>
+{% endblock %}
