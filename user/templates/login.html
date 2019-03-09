@@ -50,7 +50,7 @@
                 </ul>
                 <div class="tab-content">
                     <!-- 密码登陆 -->
-                    <form method="post" action="{% url 'login' %}" id="psw-login" class="tab-pane active" role="form" style="padding-top: 10px">
+                    <form method="post" action={{ request.get_full_path }} id="psw-login" class="tab-pane active" role="form" style="padding-top: 10px">
                         {% csrf_token %}
                         <div class="form-group">
                             <!-- <label for="username" style="font-size: 14px">用户名</label> -->

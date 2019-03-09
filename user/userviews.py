@@ -47,8 +47,12 @@ def login(request):
                         login_time=date)
                     login_record.login_num += 1
                     login_record.save()
+                url = request.GET.get('next', '')
+                print(url)
+                if not url:
+                    url = '/user/home/'
                 # home.html 首页
-                response = HttpResponseRedirect('/user/home/')
+                response = HttpResponseRedirect(url)
                 response.set_cookie(username, 'true', max_age=600)
                 return response
             else:
@@ -59,7 +63,7 @@ def login(request):
             if User.objects.filter(email=username_email).exists():
                 code = request.POST.get('code', '')
                 # 验证码一致，登陆
-                key = username_email.split('@')[0] + email.split('@')[1]
+                key = username_email.split('@')[0] + username_email.split('@')[1]
                 if request.COOKIES.get(key, '') == code:
                     return render(request, 'login.html',
                                   {'error': '验证码一致,但是功能未完成'})
